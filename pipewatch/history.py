@@ -59,6 +59,13 @@ class RunHistory:
     def last_for(self, pipeline: str, n: int = 10) -> List[HistoryEntry]:
         return [e for e in self._entries if e.pipeline == pipeline][-n:]
 
+    def success_rate(self, pipeline: str) -> Optional[float]:
+        """Return the success rate (0.0–1.0) for a pipeline, or None if no runs exist."""
+        entries = [e for e in self._entries if e.pipeline == pipeline]
+        if not entries:
+            return None
+        return sum(1 for e in entries if e.succeeded) / len(entries)
+
     def clear(self) -> None:
         self._entries = []
         self.save()

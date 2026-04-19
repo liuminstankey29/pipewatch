@@ -31,6 +31,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     if config_path and config_path.exists():
         cfg = load(config_path)
         logger.debug("Loaded config from %s", config_path)
+    elif config_path and not config_path.exists():
+        logger.error("Config file not found: %s", config_path)
+        return 2
     else:
         cfg = Config()
         if args.webhook:
@@ -47,6 +50,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 2
 
     pipeline_cmd = args.command
+    if not pipeline_cmd:
+        logger.error("No command specified. Provide a command to run after 'pipewatch run'.")
+        return 2
+
     logger.info("Starting pipeline: %s", " ".join(pipeline_cmd))
 
     result = run_pipeline(pipeline_cmd, cfg)
@@ -90,31 +97,4 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("command", nargs=argparse.REMAINDER, help="Pipeline command to execute")
     run_parser.add_argument("-c", "--config", metavar="FILE", help="Path to config YAML file")
     run_parser.add_argument("-w", "--webhook", metavar="URL", help="Slack webhook URL")
-    run_parser.add_argument("-t", "--timeout", type=int, metavar="SECONDS", help="Timeout in seconds")
-    run_parser.add_argument(
-        "--alert-on",
-        nargs="+",
-        choices=["success", "failure"],
-        metavar="EVENT",
-        help="When to send Slack alerts (success, failure)",
-    )
-    run_parser.set_defaults(func=cmd_run)
-
-    # pipewatch init
-    init_parser = subparsers.add_parser("init", help="Generate a default config file")
-    init_parser.add_argument("-o", "--output", default="pipewatch.yml", help="Output file path")
-    init_parser.add_argument("-f", "--force", action="store_true", help="Overwrite existing file")
-    init_parser.set_defaults(func=cmd_init)
-
-    return parser
-
-
-def main() -> None:
-    parser = build_parser()
-    args = parser.parse_args()
-    _setup_logging(args.verbose)
-    sys.exit(args.func(args))
-
-
-if __name__ == "__main__":
-    main()
+    run_parser.add_argument("-t", "--timeout", type=int, metavar

@@ -58,6 +58,13 @@ def test_redact_str_ignores_empty_values():
     assert result == "hello world"
 
 
+def test_redact_str_no_sensitive_values():
+    """redact_str should return the original text unchanged when the secrets list is empty."""
+    text = "nothing sensitive here"
+    result = redact_str(text, [])
+    assert result == text
+
+
 def test_sensitive_values_returns_correct_values():
     vals = sensitive_values(_SAMPLE)
     assert "s3cr3t" in vals
@@ -70,3 +77,8 @@ def test_sensitive_values_extra_patterns():
     vals = sensitive_values(data, extra_patterns=[r"(?i)priv"])
     assert "secret_val" in vals
     assert "ok" not in vals
+
+
+def test_sensitive_values_empty_dict():
+    """sensitive_values should return an empty collection for an empty dict."""
+    assert len(sensitive_values({})) == 0

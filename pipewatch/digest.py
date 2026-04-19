@@ -24,6 +24,16 @@ class DigestSummary:
 
 
 def build_digest(history: RunHistory, pipeline: Optional[str] = None, period_hours: int = 24) -> DigestSummary:
+    """Build a digest summary from run history over the given period.
+
+    Args:
+        history: The run history to summarise.
+        pipeline: If provided, restrict the digest to this pipeline name.
+        period_hours: How many hours back to look. Defaults to 24.
+
+    Returns:
+        A DigestSummary with aggregated stats for the period.
+    """
     since = datetime.utcnow() - timedelta(hours=period_hours)
     entries: List[HistoryEntry] = [
         e for e in history.all()
@@ -48,7 +58,7 @@ def format_digest_message(summary: DigestSummary) -> str:
     icon = ":white_check_mark:" if summary.failure_rate == 0 else ":warning:"
     avg = f"{summary.avg_duration:.1f}s" if summary.avg_duration is not None else "n/a"
     return (
-        f"{icon} *Digest ({summary.period_hours}h) — {label}*\n"
+        f"{icon} *Digest ({summary.period_hours}h) \u2014 {label}*\n"
         f"  Runs: {summary.total}  |  "
         f"OK: {summary.successes}  |  "
         f"Failed: {summary.failures}  |  "

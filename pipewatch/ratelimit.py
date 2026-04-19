@@ -22,7 +22,10 @@ class RateLimitPolicy:
 
 def _load_state(path: Path) -> list[float]:
     try:
-        return json.loads(path.read_text())
+        data = json.loads(path.read_text())
+        if not isinstance(data, list):
+            return []
+        return [t for t in data if isinstance(t, (int, float))]
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         return []
 
@@ -36,13 +39,18 @@ def _prune(timestamps: list[float], window: int, now: float) -> list[float]:
     return [t for t in timestamps if t >= cutoff]
 
 
+def _resolve_path(policy: RateLimitPolicy, pipeline: Optional[str]) -> Path:
+    """Resolve the state file path for a given policy and optional pipeline name."""
+    suffix = f"_{pipeline}" if pipeline else ""
+    return policy.state_file.parent / (policy.state_file.stem + suffix + policy.state_file.suffix)
+
+
 def check_and_record(policy: RateLimitPolicy, pipeline: Optional[str] = None) -> bool:
     """Return True if alert is allowed; record the attempt if so."""
     if not policy.is_enabled():
         return True
 
-    suffix = f"_{pipeline}" if pipeline else ""
-    path = policy.state_file.parent / (policy.state_file.stem + suffix + policy.state_file.suffix)
+    path = _resolve_path(policy, pipeline)
 
     now = time.time()
     timestamps = _prune(_load_state(path), policy.window_seconds, now)
@@ -56,7 +64,6 @@ def check_and_record(policy: RateLimitPolicy, pipeline: Optional[str] = None) ->
 
 
 def reset(policy: RateLimitPolicy, pipeline: Optional[str] = None) -> None:
-    suffix = f"_{pipeline}" if pipeline else ""
-    path = policy.state_file.parent / (policy.state_file.stem + suffix + policy.state_file.suffix)
+    path = _resolve_path(policy, pipeline)
     if path.exists():
         path.unlink()

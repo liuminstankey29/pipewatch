@@ -43,6 +43,10 @@ class DrainResult:
     stderr_truncated: bool = False
     bytes_written: int = 0
 
+    def any_truncated(self) -> bool:
+        """Return True if either stream was truncated due to the size limit."""
+        return self.stdout_truncated or self.stderr_truncated
+
 
 def _write_stream(data: bytes, dest: Path, max_bytes: int) -> tuple[int, bool]:
     """Write data to dest, truncating if needed. Returns (bytes_written, truncated)."""

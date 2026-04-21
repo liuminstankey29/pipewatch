@@ -37,6 +37,11 @@ class TestTimeoutPolicy:
     def test_describe_with_seconds(self):
         assert TimeoutPolicy(seconds=60).describe() == "60s timeout"
 
+    def test_negative_seconds_treated_as_disabled(self):
+        """Negative values should be treated the same as None/zero (disabled)."""
+        p = TimeoutPolicy(seconds=-1)
+        assert not p.is_enabled()
+
 
 # ---------------------------------------------------------------------------
 # policy_from_config
@@ -83,3 +88,19 @@ def test_timeout_context_raises_on_expire():
 def test_timeout_expired_message():
     err = TimeoutExpired(10)
     assert "10" in str(err)
+
+
+def test_timeout_context_restores_after_completion():
+    """Ensure the timeout context cleans up properly after a successful block.
+
+    A second context with a short limit should still fire correctly,
+    proving the first context did not leave any stale alarm signal behind.
+    """
+    policy_ok = TimeoutPolicy(seconds=5)
+    with timeout_context(policy_ok):
+        pass  # completes instantly
+
+    policy_short = TimeoutPolicy(seconds=1)
+    with pytest.raises(TimeoutExpired):
+        with timeout_context(policy_short):
+            time.sleep(5)

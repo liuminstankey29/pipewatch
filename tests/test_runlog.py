@@ -87,3 +87,17 @@ def test_log_path_safe_chars():
     p = log_path("/tmp", "my pipeline", "2024-01-01T10:00:00")
     assert " " not in p.name
     assert "/" not in p.name
+
+
+def test_save_log_returns_path_with_json_extension(tmp_path):
+    """save_log should return a Path ending in .json."""
+    p = save_log(_entry(), log_dir=str(tmp_path))
+    assert p.suffix == ".json"
+
+
+def test_load_log_invalid_json(tmp_path):
+    """load_log should raise an error when the file contains invalid JSON."""
+    bad_file = tmp_path / "bad.json"
+    bad_file.write_text("not valid json")
+    with pytest.raises((json.JSONDecodeError, ValueError)):
+        load_log(str(bad_file))

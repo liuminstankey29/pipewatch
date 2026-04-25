@@ -48,6 +48,19 @@ def format_pipeline_message(
     exit_code: Optional[int] = None,
     extra: Optional[str] = None,
 ) -> str:
+    """
+    Format a pipeline status message for Slack.
+
+    Args:
+        job_name: The name of the pipeline job.
+        status: The job status string, e.g. ``"success"`` or ``"failure"``.
+        duration_seconds: How long the job ran, in seconds.
+        exit_code: Optional process exit code to include in the message.
+        extra: Optional free-form text appended as a final line.
+
+    Returns:
+        A newline-joined string suitable for posting to Slack.
+    """
     icon = ":white_check_mark:" if status == "success" else ":x:"
     lines = [
         f"{icon} *pipewatch* | Job: `{job_name}`",

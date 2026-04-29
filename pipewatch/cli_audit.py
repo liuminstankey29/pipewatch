@@ -45,10 +45,19 @@ def _format_event(ev: AuditEvent) -> str:
 
 
 def print_audit(args: argparse.Namespace) -> None:
+    """Handle the audit sub-command.
+
+    Clears the audit log when ``--clear`` is given, otherwise loads and prints
+    events for the specified pipeline, applying optional ``--event`` type
+    filtering and ``--tail`` truncation.
+    """
     if args.clear:
         clear_events(args.pipeline, log_dir=args.log_dir)
         print(f"Audit log cleared for '{args.pipeline}'.")
         return
+
+    if args.tail is not None and args.tail <= 0:
+        raise argparse.ArgumentTypeError("--tail must be a positive integer")
 
     events = load_events(args.pipeline, log_dir=args.log_dir, event_type=args.event_type)
     if args.tail is not None:

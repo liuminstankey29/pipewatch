@@ -46,6 +46,16 @@ def test_filter_missing_one():
     assert TagFilter(required=["etl", "nightly"]).matches(["etl"]) is False
 
 
+def test_filter_required_against_empty_tags():
+    """A filter with required tags should not match an empty tag list."""
+    assert TagFilter(required=["etl"]).matches([]) is False
+
+
+def test_filter_multiple_required_all_missing():
+    """None of the required tags are present."""
+    assert TagFilter(required=["etl", "nightly"]).matches(["prod", "staging"]) is False
+
+
 # ---------------------------------------------------------------------------
 # format_tags
 # ---------------------------------------------------------------------------
@@ -102,3 +112,12 @@ def test_filter_from_args_no_flag_matches_all():
     args = _parse()
     f = filter_from_args(args)
     assert f.matches([]) is True
+
+
+def test_filter_from_args_multiple_required_tags():
+    """--filter-tags with a CSV value should require all listed tags."""
+    args = _parse("--filter-tags", "etl,nightly")
+    f = filter_from_args(args)
+    assert f.required == ["etl", "nightly"]
+    assert f.matches(["etl", "nightly", "prod"]) is True
+    assert f.matches(["etl"]) is False

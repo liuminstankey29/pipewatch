@@ -62,6 +62,11 @@ def test_filter_from_args_populated():
     assert filter_from_args(args) == {"env": "prod"}
 
 
+def test_filter_from_args_multiple():
+    args = _parse("--filter-label", "env=prod", "--filter-label", "team=data")
+    assert filter_from_args(args) == {"env": "prod", "team": "data"}
+
+
 def test_resolve_labels_cli_wins_over_config():
     args = _parse("--label", "env=staging")
     ls = resolve_labels(args, cfg={"labels": {"env": "prod", "team": "data"}})
@@ -74,3 +79,11 @@ def test_resolve_labels_no_config():
     args = _parse("--label", "env=prod")
     ls = resolve_labels(args)
     assert ls.get("env") == "prod"
+
+
+def test_resolve_labels_config_only():
+    """Config labels are used when no CLI labels are provided."""
+    args = _parse()
+    ls = resolve_labels(args, cfg={"labels": {"env": "prod", "team": "data"}})
+    assert ls.get("env") == "prod"
+    assert ls.get("team") == "data"

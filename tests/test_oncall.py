@@ -46,6 +46,14 @@ class TestOnCallRotation:
         r = _rotation()
         assert r.mention(_dt(0)) == "<@U111>"
 
+    def test_partial_period_stays_in_same_slot(self):
+        """A datetime mid-period should still resolve to the same on-call entry."""
+        r = _rotation()
+        # Day 3 is still within Alice's first 7-day window
+        assert r.current(_dt(3)) == ALICE
+        # Day 10 is still within Bob's 7-day window
+        assert r.current(_dt(10)) == BOB
+
     def test_empty_rotation_returns_none(self):
         r = OnCallRotation(entries=[])
         assert r.current() is None
